@@ -1,7 +1,7 @@
 project_name: fission
 release:
   github:
-    owner: fission
+    owner: sanketsudake
     name: fission
   prerelease: true
   draft: true
