@@ -66,11 +66,11 @@ jobs:
       - name: Check cosign install!
         run: cosign version
 
-      # - name: Write cosign signing key to disk
-      #   run: 'echo "$KEY" > cosign.key'
-      #   shell: bash
-      #   env:
-      #     KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+      - name: Write cosign signing key to disk
+        run: 'echo "$KEY" > cosign.key'
+        shell: bash
+        env:
+          KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
 
       - name: Generate yaml for manifest, Minikube and Openshift installation
         run: ${GITHUB_WORKSPACE}/hack/build-yaml.sh $VERSION
@@ -84,7 +84,7 @@ jobs:
           version: latest
           args: release
         env:
-          COSIGN_PWD: ${{ secrets.COSIGN_PWD }}
+          COSIGN_PWD: ${{ secrets.COSIGN_PASSWORD }}
           GORELEASER_CURRENT_TAG: ${{ steps.get_version.outputs.VERSION }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DOCKER_CLI_EXPERIMENTAL: "enabled"

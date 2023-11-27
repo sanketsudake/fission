@@ -352,7 +352,7 @@ signs:
   output: true
   args:
     - sign-blob
-    # - '--key=cosign.key'
+    - '--key=cosign.key'
     - '--output-certificate=${certificate}'
     - '--output-signature=${signature}'
     - '${artifact}'
@@ -367,6 +367,6 @@ docker_signs:
   output: true
   args:
     - 'sign'
-    # - '--key=cosign.key'
+    - '--key=cosign.key'
     - '${artifact}'
     - '--yes' # needed for cosign 2.0.0+
