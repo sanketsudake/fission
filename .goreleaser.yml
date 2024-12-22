@@ -421,7 +421,7 @@ docker_signs:
     cmd: cosign
     artifacts: all
     args:
-      - sign-blob
+      - sign
       - "--output-signature=${artifact}-keyless.sig"
       - "--output-certificate=${artifact}-keyless.pem"
       - "${artifact}"
