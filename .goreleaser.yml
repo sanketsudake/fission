@@ -389,30 +389,34 @@ checksum:
 # signs the checksum file
 # https://goreleaser.com/customization/sign
 signs:
-- cmd: cosign
+# - id: cosign
+#   cmd: cosign
+#   artifacts: all
+#   stdin: '{{ .Env.COSIGN_PWD }}'
+#   output: true
+#   args:
+#     - sign-blob
+#     - '--key=cosign.key'
+#     - '--output-certificate=${certificate}'
+#     - '--output-signature=${signature}'
+#     - '${artifact}'
+#     - '--yes' # needed for cosign 2.0.0+
+- id: cosign-keyless
+  signature: "${artifact}-keyless.sig"
+  certificate: "${artifact}-keyless.pem"
+  cmd: cosign
   artifacts: all
-  stdin: '{{ .Env.COSIGN_PWD }}'
-  output: true
-  args:
-    - sign-blob
-    - '--key=cosign.key'
-    - '--output-certificate=${certificate}'
-    - '--output-signature=${signature}'
-    - '${artifact}'
-    - '--yes' # needed for cosign 2.0.0+
+  args: ["sign-blob", "--output-signature", "${artifact}-keyless.sig", "--output-certificate", "${artifact}-keyless.pem", "${artifact}"]
 
 # signs our docker image
 # https://goreleaser.com/customization/docker_sign
 docker_signs:
-- cmd: cosign
+- id: cosign-keyless
+  signature: "${artifact}-keyless.sig"
+  certificate: "${artifact}-keyless.pem"
+  cmd: cosign
   artifacts: all
-  stdin: '{{ .Env.COSIGN_PWD }}'
-  output: true
-  args:
-    - 'sign'
-    - '--key=cosign.key'
-    - '${artifact}'
-    - '--yes' # needed for cosign 2.0.0+
+  args: ["sign-blob", "--output-signature", "${artifact}-keyless.sig", "--output-certificate", "${artifact}-keyless.pem", "${artifact}"]
 sboms:
   - artifacts: archive
     id: archive
