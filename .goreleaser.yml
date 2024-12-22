@@ -105,7 +105,7 @@ kos:
     bare: true
     preserve_import_paths: false
     base_import_paths: false
-    labels:
+    annotations:
       "org.opencontainers.image.description": "The builder assists in building the fission function source code for deployment."
       "org.opencontainers.image.source": "{{.GitURL}}"
       "org.opencontainers.image.created": "{{.Date}}"
@@ -116,7 +116,7 @@ kos:
     build: fetcher
     repositories:
       - ghcr.io/sanketsudake/fetcher
-    labels:
+    annotations:
       "org.opencontainers.image.description": "Fetcher is a lightweight component used by environment and builder pods. Fetcher helps in fetch and upload of source/deployment packages and specializing environments."
       "org.opencontainers.image.source": "{{.GitURL}}"
       "org.opencontainers.image.created": "{{.Date}}"
@@ -127,7 +127,7 @@ kos:
     build: fission-bundle
     repositories:
       - ghcr.io/sanketsudake/fission-bundle
-    labels:
+    annotations:
       "org.opencontainers.image.description": "fission-bundle is a component which is a single binary for all components. Most server side components running on server side are fission-bundle binary wrapped in container and used with different arguments."
       "org.opencontainers.image.source": "{{.GitURL}}"
       "org.opencontainers.image.created": "{{.Date}}"
@@ -138,7 +138,7 @@ kos:
     build: pre-upgrade-checks
     repositories:
       - ghcr.io/sanketsudake/pre-upgrade-checks
-    labels:
+    annotations:
       "org.opencontainers.image.description": "Preupgradechecks ensures that Fission is ready for the targeted version upgrade by performing checks beforehand."
       "org.opencontainers.image.source": "{{.GitURL}}"
       "org.opencontainers.image.created": "{{.Date}}"
@@ -149,7 +149,7 @@ kos:
     build: reporter
     repositories:
       - ghcr.io/sanketsudake/reporter
-    labels:
+    annotations:
       "org.opencontainers.image.description": "The reporter gathers information that assists in improving fission."
       "org.opencontainers.image.source": "{{.GitURL}}"
       "org.opencontainers.image.created": "{{.Date}}"
