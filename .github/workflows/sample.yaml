@@ -5,6 +5,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      ghcr_images: ${{ steps.image.outputs.ghcr_images }}
+      ghcr_digests: ${{ steps.image.outputs.ghcr_digests }}
     steps:
     - name: "Checkout Repository"
       uses: actions/checkout@v3
@@ -25,7 +28,6 @@ jobs:
         # docker_images=$(echo "${image_and_digest}" | grep -v ghcr.io | cut -d'@' -f1 | cut -d':' -f1 | jq -R -s -c 'split("\n") | map(select(. != ""))')
         # docker_digests=$(echo "${image_and_digest}" | grep -v ghcr.io | cut -d'@' -f2 | jq -R -s -c 'split("\n") | map(select(. != ""))')
         # echo "Docker images: $docker_images"
-        # echo "Docker digests: $docker_digests"
         # echo "docker_images=$docker_images" >> "$GITHUB_OUTPUT"
         # echo "docker_digests=$docker_digests" >> "$GITHUB_OUTPUT"
 
