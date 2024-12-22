@@ -125,7 +125,6 @@ kos:
       - ghcr.io/sanketsudake/reporter:{{.Tag}}
       - ghcr.io/sanketsudake/reporter:latest
 
-
 # dockers:
 #   - &docker-amd64
 #     use: buildx
@@ -389,34 +388,44 @@ checksum:
 # signs the checksum file
 # https://goreleaser.com/customization/sign
 signs:
-# - id: cosign
-#   cmd: cosign
-#   artifacts: all
-#   stdin: '{{ .Env.COSIGN_PWD }}'
-#   output: true
-#   args:
-#     - sign-blob
-#     - '--key=cosign.key'
-#     - '--output-certificate=${certificate}'
-#     - '--output-signature=${signature}'
-#     - '${artifact}'
-#     - '--yes' # needed for cosign 2.0.0+
-- id: cosign-keyless
-  signature: "${artifact}-keyless.sig"
-  certificate: "${artifact}-keyless.pem"
-  cmd: cosign
-  artifacts: all
-  args: ["sign-blob", "--output-signature", "${artifact}-keyless.sig", "--output-certificate", "${artifact}-keyless.pem", "${artifact}"]
+  # - id: cosign
+  #   cmd: cosign
+  #   artifacts: all
+  #   stdin: '{{ .Env.COSIGN_PWD }}'
+  #   output: true
+  #   args:
+  #     - sign-blob
+  #     - '--key=cosign.key'
+  #     - '--output-certificate=${certificate}'
+  #     - '--output-signature=${signature}'
+  #     - '${artifact}'
+  #     - '--yes' # needed for cosign 2.0.0+
+  - id: cosign-keyless
+    signature: "${artifact}-keyless.sig"
+    certificate: "${artifact}-keyless.pem"
+    cmd: cosign
+    artifacts: all
+    args:
+      - sign-blob
+      - "--output-signature=${artifact}-keyless.sig"
+      - "--output-certificate=${artifact}-keyless.pem"
+      - "${artifact}"
+      - "--yes" # needed for cosign 2.0.0+
 
 # signs our docker image
 # https://goreleaser.com/customization/docker_sign
 docker_signs:
-- id: cosign-keyless
-  signature: "${artifact}-keyless.sig"
-  certificate: "${artifact}-keyless.pem"
-  cmd: cosign
-  artifacts: all
-  args: ["sign-blob", "--output-signature", "${artifact}-keyless.sig", "--output-certificate", "${artifact}-keyless.pem", "${artifact}"]
+  - id: cosign-keyless
+    signature: "${artifact}-keyless.sig"
+    certificate: "${artifact}-keyless.pem"
+    cmd: cosign
+    artifacts: all
+    args:
+      - sign-blob
+      - "--output-signature=${artifact}-keyless.sig"
+      - "--output-certificate=${artifact}-keyless.pem"
+      - "${artifact}"
+      - "--yes" # needed for cosign 2.0.0+
 sboms:
   - artifacts: archive
     id: archive
