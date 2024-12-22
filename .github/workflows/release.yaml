@@ -14,8 +14,8 @@ jobs:
   create-draft-release:
     outputs:
       hashes: ${{ steps.binary.outputs.hashes }}
-      # image: ${{ steps.image.outputs.name }}
-      # digest: ${{ steps.image.outputs.digest }}
+      ghcr_images: ${{ steps.image.outputs.ghcr_images }}
+      ghcr_digests: ${{ steps.image.outputs.ghcr_digests }}
     permissions:
       contents: write # for goreleaser/goreleaser-action to create a GitHub release
       packages: write # for goreleaser/goreleaser-action to upload artifacts to GitHub Packages
