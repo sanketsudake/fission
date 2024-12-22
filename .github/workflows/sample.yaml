@@ -7,7 +7,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       ghcr_images: ${{ steps.image.outputs.ghcr_images }}
-      ghcr_digests: ${{ steps.image.outputs.ghcr_digests }}
     steps:
     - name: "Checkout Repository"
       uses: actions/checkout@v3
@@ -36,13 +35,12 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        image: ${{ fromJson(needs.build.outputs.ghcr_images) }}
-        digest: ${{ fromJson(needs.build.outputs.ghcr_digests) }}
+        include: ${{ fromJson(needs.build.outputs.ghcr_images) }}
     steps:
       - name: "Verify variables"
         env:
-          IMAGE: ${{ matrix.image }}
-          DIGEST: ${{ matrix.digest }}
+          IMAGE: ${{ fromJson(toJson(matrix)).image }}
+          DIGEST: ${{ fromJson(toJson(matrix)).checksum }}
         run: |
-          echo "Image: ${{ matrix.image }}"
-          echo "Digest: ${{ matrix.digest }}"
+          echo "Image: $IMAGE"
+          echo "Digest: $DIGEST"
