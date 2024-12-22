@@ -94,36 +94,37 @@ kos:
     id: builder
     build: builder
     repositories:
-      - ghcr.io/sanketsudake/builder:{{.Tag}}
-      - ghcr.io/sanketsudake/builder:latest
+      - ghcr.io/sanketsudake/builder
+    tags:
+      - "{{.Tag}}"
+      - latest
     platforms:
       - linux/amd64
       - linux/arm64
     sbom: spdx
+    bare: true
+    preserve_import_paths: false
+    base_import_paths: false
   - <<: *ko-linux
     id: fetcher
     build: fetcher
     repositories:
-      - ghcr.io/sanketsudake/fetcher:{{.Tag}}
-      - ghcr.io/sanketsudake/fetcher:latest
+      - ghcr.io/sanketsudake/fetcher
   - <<: *ko-linux
     id: fission-bundle
     build: fission-bundle
     repositories:
-      - ghcr.io/sanketsudake/fission-bundle:{{.Tag}}
-      - ghcr.io/sanketsudake/fission-bundle:latest
+      - ghcr.io/sanketsudake/fission-bundle
   - <<: *ko-linux
     id: pre-upgrade-checks
     build: pre-upgrade-checks
     repositories:
-      - ghcr.io/sanketsudake/pre-upgrade-checks:{{.Tag}}
-      - ghcr.io/sanketsudake/pre-upgrade-checks:latest
+      - ghcr.io/sanketsudake/pre-upgrade-checks
   - <<: *ko-linux
     id: reporter
     build: reporter
     repositories:
-      - ghcr.io/sanketsudake/reporter:{{.Tag}}
-      - ghcr.io/sanketsudake/reporter:latest
+      - ghcr.io/sanketsudake/reporter
 
 # dockers:
 #   - &docker-amd64
@@ -400,11 +401,22 @@ signs:
   #     - '--output-signature=${signature}'
   #     - '${artifact}'
   #     - '--yes' # needed for cosign 2.0.0+
-  - id: cosign-keyless
+  - id: cosign-keyless-binary
     signature: "${artifact}-keyless.sig"
     certificate: "${artifact}-keyless.pem"
     cmd: cosign
-    artifacts: all
+    artifacts: binary
+    args:
+      - sign-blob
+      - "--output-signature=${artifact}-keyless.sig"
+      - "--output-certificate=${artifact}-keyless.pem"
+      - "${artifact}"
+      - "--yes" # needed for cosign 2.0.0+
+  - id: cosign-keyless-checksum
+    signature: "${artifact}-keyless.sig"
+    certificate: "${artifact}-keyless.pem"
+    cmd: cosign
+    artifacts: checksum
     args:
       - sign-blob
       - "--output-signature=${artifact}-keyless.sig"
