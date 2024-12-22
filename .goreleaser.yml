@@ -94,10 +94,8 @@ kos:
     id: builder
     build: builder
     repositories:
-      - ghcr.io/fission/builder:{{.Tag}}
-      - ghcr.io/fission/builder:latest
-      - fission/builder:{{.Tag}}
-      - fission/builder:latest
+      - ghcr.io/sanketsudake/builder:{{.Tag}}
+      - ghcr.io/sanketsudake/builder:latest
     platforms:
       - linux/amd64
       - linux/arm64
@@ -106,34 +104,27 @@ kos:
     id: fetcher
     build: fetcher
     repositories:
-      - ghcr.io/fission/fetcher:{{.Tag}}
-      - ghcr.io/fission/fetcher:latest
-      - fission/fetcher:{{.Tag}}
-      - fission/fetcher:latest
+      - ghcr.io/sanketsudake/fetcher:{{.Tag}}
+      - ghcr.io/sanketsudake/fetcher:latest
   - <<: *ko-linux
     id: fission-bundle
     build: fission-bundle
     repositories:
-      - ghcr.io/fission/fission-bundle:{{.Tag}}
-      - ghcr.io/fission/fission-bundle:latest
-      - fission/fission-bundle:{{.Tag}}
-      - fission/fission-bundle:latest
+      - ghcr.io/sanketsudake/fission-bundle:{{.Tag}}
+      - ghcr.io/sanketsudake/fission-bundle:latest
   - <<: *ko-linux
     id: pre-upgrade-checks
     build: pre-upgrade-checks
     repositories:
-      - ghcr.io/fission/pre-upgrade-checks:{{.Tag}}
-      - ghcr.io/fission/pre-upgrade-checks:latest
-      - fission/pre-upgrade-checks:{{.Tag}}
-      - fission/pre-upgrade-checks:latest
+      - ghcr.io/sanketsudake/pre-upgrade-checks:{{.Tag}}
+      - ghcr.io/sanketsudake/pre-upgrade-checks:latest
   - <<: *ko-linux
     id: reporter
     build: reporter
     repositories:
-      - ghcr.io/fission/reporter:{{.Tag}}
-      - ghcr.io/fission/reporter:latest
-      - fission/reporter:{{.Tag}}
-      - fission/reporter:latest
+      - ghcr.io/sanketsudake/reporter:{{.Tag}}
+      - ghcr.io/sanketsudake/reporter:latest
+
 
 # dockers:
 #   - &docker-amd64
