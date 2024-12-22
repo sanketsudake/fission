@@ -154,6 +154,7 @@ jobs:
       base64-subjects: "${{ needs.create-draft-release.outputs.hashes }}"
       provenance-name: "fission.intoto.jsonl"
       upload-assets: true # upload to a new release
+      draft-release: true # create a draft release
 
   image-provenance-ghcr:
     needs: [create-draft-release]
@@ -203,8 +204,6 @@ jobs:
           PROVENANCE: "${{ needs.binary-provenance.outputs.provenance-name }}"
         run: |
           set -euo pipefail
-          gh -R "$GITHUB_REPOSITORY" release download "$GITHUB_REF_NAME" -p "*.tar.gz"
-          gh -R "$GITHUB_REPOSITORY" release download "$GITHUB_REF_NAME" -p "*.zip"
           gh -R "$GITHUB_REPOSITORY" release download "$GITHUB_REF_NAME" -p "$PROVENANCE"
       - name: Verify assets
         env:
