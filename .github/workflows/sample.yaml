@@ -1,0 +1,41 @@
+name: "Sample Workflow"
+on:
+    workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: "Checkout Repository"
+      uses: actions/checkout@v3
+    - name: "Run a Command"
+      run: echo "Hello from the workflow!"
+    - name: Image digest
+      id: image
+      run: |
+        set -euo pipefail
+        image_and_digest=$(cat .github/workflows/artifacts.json | jq -r '.[] | select (.type=="Docker Manifest") | {name, "digest": (.extra.Digest // .extra.Checksum)} | select(.digest) | {name} + {digest} | join("@") | sub("^sha256:";"")' | grep -v latest)
+        ghcr_images=$(echo "${image_and_digest}" | grep ghcr.io | cut -d'@' -f1 | cut -d':' -f1 | jq -R -s -c 'split("\n") | map(select(. != ""))')
+        ghcr_digests=$(echo "${image_and_digest}" | grep ghcr.io | cut -d'@' -f2 | jq -R -s -c 'split("\n") | map(select(. != ""))')
+        docker_images=$(echo "${image_and_digest}" | grep -v ghcr.io | cut -d'@' -f1 | cut -d':' -f1 | jq -R -s -c 'split("\n") | map(select(. != ""))')
+        docker_digests=$(echo "${image_and_digest}" | grep -v ghcr.io | cut -d'@' -f2 | jq -R -s -c 'split("\n") | map(select(. != ""))')
+        echo "ghcr_images=$ghcr_images" >> "$GITHUB_OUTPUT"
+        echo "ghcr_digests=$ghcr_digests" >> "$GITHUB_OUTPUT"
+        # echo "docker_images=$docker_images" >> "$GITHUB_OUTPUT"
+        # echo "docker_digests=$docker_digests" >> "$GITHUB_OUTPUT"
+
+  image-verifier:
+    needs: [build]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image: ${{ fromJson(needs.build.outputs.ghcr_images) }}
+        digest: ${{ fromJson(needs.build.outputs.ghcr_digests) }}
+    steps:
+      - name: "Verify variables"
+        env:
+          IMAGE: ${{ matrix.image }}
+          DIGEST: ${{ matrix.digest }}
+        run: |
+          echo "Image: ${{ matrix.image }}"
+          echo "Digest: ${{ matrix.digest }}"
