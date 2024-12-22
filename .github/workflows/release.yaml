@@ -15,7 +15,6 @@ jobs:
     outputs:
       hashes: ${{ steps.binary.outputs.hashes }}
       ghcr_images: ${{ steps.image.outputs.ghcr_images }}
-      ghcr_digests: ${{ steps.image.outputs.ghcr_digests }}
     permissions:
       contents: write # for goreleaser/goreleaser-action to create a GitHub release
       packages: write # for goreleaser/goreleaser-action to upload artifacts to GitHub Packages
@@ -121,14 +120,28 @@ jobs:
         run: |
           set -euo pipefail
           image_and_digest=$(echo "$ARTIFACTS" | jq -r '.[] | select (.type=="Docker Manifest") | {name, "digest": (.extra.Digest // .extra.Checksum)} | select(.digest) | {name} + {digest} | join("@") | sub("^sha256:";"")' | grep -v latest)
-          ghcr_images=$(echo "${image_and_digest}" | grep ghcr.io | cut -d'@' -f1 | cut -d':' -f1 | jq -R -s -c 'split("\n") | map(select(. != ""))')
-          ghcr_digests=$(echo "${image_and_digest}" | grep ghcr.io | cut -d'@' -f2 | jq -R -s -c 'split("\n") | map(select(. != ""))')
-          docker_images=$(echo "${image_and_digest}" | grep -v ghcr.io | cut -d'@' -f1 | cut -d':' -f1 | jq -R -s -c 'split("\n") | map(select(. != ""))')
-          docker_digests=$(echo "${image_and_digest}" | grep -v ghcr.io | cut -d'@' -f2 | jq -R -s -c 'split("\n") | map(select(. != ""))')
+          ghcr_images=$(echo "${image_and_digest}" | grep ghcr.io | jq -R -s -c '
+            split("\n")
+            | map(select(. != ""))
+            | map(
+                split("@")
+                | {
+                    "image": .[0] | split(":")[0],
+                    "checksum": .[1]
+                  }
+              )')
           echo "ghcr_images=$ghcr_images" >> "$GITHUB_OUTPUT"
-          echo "ghcr_digests=$ghcr_digests" >> "$GITHUB_OUTPUT"
+          # docker_images=$(echo "${image_and_digest}" | grep -v ghcr.io | jq -R -s -c '
+          #   split("\n")
+          #   | map(select(. != ""))
+          #   | map(
+          #       split("@")
+          #       | {
+          #           "image": .[0] | split(":")[0],
+          #           "checksum": .[1]
+          #         }
+          #     )')
           # echo "docker_images=$docker_images" >> "$GITHUB_OUTPUT"
-          # echo "docker_digests=$docker_digests" >> "$GITHUB_OUTPUT"
 
   binary-provenance:
     needs: [create-draft-release]
@@ -147,15 +160,14 @@ jobs:
     strategy:
       matrix:
         image: ${{ fromJson(needs.create-draft-release.outputs.ghcr_images) }}
-        digest: ${{ fromJson(needs.create-draft-release.outputs.ghcr_digests) }}
     permissions:
       actions: read
       id-token: write
       packages: write
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0
     with:
-      image: ${{ matrix.image }}
-      digest: ${{ matrix.digest }}
+      image: ${{ fromJson(matrix).image }}
+      digest: ${{ fromJson(matrix).checksum }}
       registry-username: ${{ github.actor }}
     secrets:
       registry-password: ${{ secrets.GITHUB_TOKEN }}
