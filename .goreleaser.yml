@@ -20,6 +20,27 @@ before:
 snapshot:
   version_template: "{{ .Tag }}"
 builds:
+  # - id: fission-cli
+  #   ldflags:
+  #     - -s -w
+  #     - -X github.com/fission/fission/pkg/info.GitCommit={{.ShortCommit}}
+  #     - -X github.com/fission/fission/pkg/info.BuildDate={{.Date}}
+  #     - -X github.com/fission/fission/pkg/info.Version={{.Tag}}
+  #   gcflags:
+  #     - all=-trimpath={{ if index .Env "GITHUB_WORKSPACE"}}{{ .Env.GITHUB_WORKSPACE }}{{ else }}{{ .Env.PWD }}{{ end }}
+  #   asmflags:
+  #     - all=-trimpath={{ if index .Env "GITHUB_WORKSPACE"}}{{ .Env.GITHUB_WORKSPACE }}{{ else }}{{ .Env.PWD }}{{ end }}
+  #   env:
+  #     - CGO_ENABLED=0
+  #   goos:
+  #     - linux
+  #     - windows
+  #     - darwin
+  #   ignore:
+  #     - goos: windows
+  #       goarch: arm64
+  #   binary: fission
+  #   dir: ./cmd/fission-cli
   - &build-linux
     id: builder
     ldflags:
@@ -67,254 +88,301 @@ builds:
     id: reporter
     binary: reporter
     dir: ./cmd/reporter
-dockers:
-  - &docker-amd64
-    use: buildx
-    goos: linux
-    goarch: amd64
-    ids:
-      - builder
-    image_templates:
-      - "fission/builder:latest-amd64"
-      - "fission/builder:{{ .Tag }}-amd64"
-      - "ghcr.io/fission/builder:latest-amd64"
-      - "ghcr.io/fission/builder:{{ .Tag }}-amd64"
-    dockerfile: cmd/builder/Dockerfile
-    build_flag_templates:
-      - "--label=org.opencontainers.image.description=The builder assists in building the fission function source code for deployment."
-      - "--label=org.opencontainers.image.source={{.GitURL}}"
-      - "--platform=linux/amd64"
-      - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version={{.Tag}}"
-  - <<: *docker-amd64
-    ids:
-      - fetcher
-    image_templates:
-      - "fission/fetcher:latest-amd64"
-      - "fission/fetcher:{{ .Tag }}-amd64"
-      - "ghcr.io/fission/fetcher:latest-amd64"
-      - "ghcr.io/fission/fetcher:{{ .Tag }}-amd64"
-    dockerfile: cmd/fetcher/Dockerfile
-    build_flag_templates:
-      - "--label=org.opencontainers.image.description=Fetcher is a lightweight component used by environment and builder pods. Fetcher helps in fetch and upload of source/deployment packages and specializing environments."
-      - "--label=org.opencontainers.image.source={{.GitURL}}"
-      - "--platform=linux/amd64"
-      - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version={{.Tag}}"
-  - <<: *docker-amd64
-    ids:
-      - fission-bundle
-    image_templates:
-      - "fission/fission-bundle:latest-amd64"
-      - "fission/fission-bundle:{{ .Tag }}-amd64"
-      - "ghcr.io/fission/fission-bundle:latest-amd64"
-      - "ghcr.io/fission/fission-bundle:{{ .Tag }}-amd64"
-    dockerfile: cmd/fission-bundle/Dockerfile
-    build_flag_templates:
-      - "--label=org.opencontainers.image.description=fission-bundle is a component which is a single binary for all components. Most server side components running on server side are fission-bundle binary wrapped in container and used with different arguments."
-      - "--label=org.opencontainers.image.source={{.GitURL}}"
-      - "--platform=linux/amd64"
-      - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version={{.Tag}}"
-  - <<: *docker-amd64
-    ids:
-      - pre-upgrade-checks
-    image_templates:
-      - "fission/pre-upgrade-checks:latest-amd64"
-      - "fission/pre-upgrade-checks:{{ .Tag }}-amd64"
-      - "ghcr.io/fission/pre-upgrade-checks:latest-amd64"
-      - "ghcr.io/fission/pre-upgrade-checks:{{ .Tag }}-amd64"
-    dockerfile: cmd/preupgradechecks/Dockerfile
-    build_flag_templates:
-      - "--label=org.opencontainers.image.description=Preupgradechecks ensures that Fission is ready for the targeted version upgrade by performing checks beforehand."
-      - "--label=org.opencontainers.image.source={{.GitURL}}"
-      - "--platform=linux/amd64"
-      - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version={{.Tag}}"
-  - <<: *docker-amd64
-    ids:
-      - reporter
-    image_templates:
-      - "fission/reporter:latest-amd64"
-      - "fission/reporter:{{ .Tag }}-amd64"
-      - "ghcr.io/fission/reporter:latest-amd64"
-      - "ghcr.io/fission/reporter:{{ .Tag }}-amd64"
-    dockerfile: cmd/reporter/Dockerfile
-    build_flag_templates:
-      - "--label=org.opencontainers.image.description=The reporter gathers information that assists in improving fission."
-      - "--label=org.opencontainers.image.source={{.GitURL}}"
-      - "--platform=linux/amd64"
-      - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version={{.Tag}}"
-  - &docker-arm64
-    use: buildx
-    goos: linux
-    goarch: arm64
-    ids:
-      - builder
-    image_templates:
-      - "fission/builder:latest-arm64"
-      - "fission/builder:{{ .Tag }}-arm64"
-      - "ghcr.io/fission/builder:latest-arm64"
-      - "ghcr.io/fission/builder:{{ .Tag }}-arm64"
-    dockerfile: cmd/builder/Dockerfile
-    build_flag_templates:
-      - "--label=org.opencontainers.image.description=The builder assists in building the fission function source code for deployment."
-      - "--label=org.opencontainers.image.source={{.GitURL}}"
-      - "--platform=linux/arm64"
-      - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version={{.Tag}}"
-  - <<: *docker-arm64
-    ids:
-      - fetcher
-    image_templates:
-      - "fission/fetcher:latest-arm64"
-      - "fission/fetcher:{{ .Tag }}-arm64"
-      - "ghcr.io/fission/fetcher:latest-arm64"
-      - "ghcr.io/fission/fetcher:{{ .Tag }}-arm64"
-    dockerfile: cmd/fetcher/Dockerfile
-    build_flag_templates:
-      - "--label=org.opencontainers.image.description=Fetcher is a lightweight component used by environment and builder pods. Fetcher helps in fetch and upload of source/deployment packages and specializing environments."
-      - "--label=org.opencontainers.image.source={{.GitURL}}"
-      - "--platform=linux/arm64"
-      - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version={{.Tag}}"
-  - <<: *docker-arm64
-    ids:
-      - fission-bundle
-    image_templates:
-      - "fission/fission-bundle:latest-arm64"
-      - "fission/fission-bundle:{{ .Tag }}-arm64"
-      - "ghcr.io/fission/fission-bundle:latest-arm64"
-      - "ghcr.io/fission/fission-bundle:{{ .Tag }}-arm64"
-    dockerfile: cmd/fission-bundle/Dockerfile
-    build_flag_templates:
-      - "--label=org.opencontainers.image.description=fission-bundle is a component which is a single binary for all components. Most server side components running on server side are fission-bundle binary wrapped in container and used with different arguments."
-      - "--label=org.opencontainers.image.source={{.GitURL}}"
-      - "--platform=linux/arm64"
-      - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version={{.Tag}}"
-  - <<: *docker-arm64
-    ids:
-      - pre-upgrade-checks
-    image_templates:
-      - "fission/pre-upgrade-checks:latest-arm64"
-      - "fission/pre-upgrade-checks:{{ .Tag }}-arm64"
-      - "ghcr.io/fission/pre-upgrade-checks:latest-arm64"
-      - "ghcr.io/fission/pre-upgrade-checks:{{ .Tag }}-arm64"
-    dockerfile: cmd/preupgradechecks/Dockerfile
-    build_flag_templates:
-      - "--label=org.opencontainers.image.description=Preupgradechecks ensures that Fission is ready for the targeted version upgrade by performing checks beforehand."
-      - "--label=org.opencontainers.image.source={{.GitURL}}"
-      - "--platform=linux/arm64"
-      - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version={{.Tag}}"
-  - <<: *docker-arm64
-    ids:
-      - reporter
-    image_templates:
-      - "fission/reporter:latest-arm64"
-      - "fission/reporter:{{ .Tag }}-arm64"
-      - "ghcr.io/fission/reporter:latest-arm64"
-      - "ghcr.io/fission/reporter:{{ .Tag }}-arm64"
-    dockerfile: cmd/reporter/Dockerfile
-    build_flag_templates:
-      - "--label=org.opencontainers.image.description=The reporter gathers information that assists in improving fission."
-      - "--label=org.opencontainers.image.source={{.GitURL}}"
-      - "--platform=linux/arm64"
-      - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version={{.Tag}}"
-docker_manifests:
-  - name_template: ghcr.io/fission/builder:{{ .Tag }}
-    image_templates:
-      - ghcr.io/fission/builder:{{ .Tag }}-amd64
-      - ghcr.io/fission/builder:{{ .Tag }}-arm64
-  - name_template: fission/builder:{{ .Tag }}
-    image_templates:
-      - fission/builder:{{ .Tag }}-amd64
-      - fission/builder:{{ .Tag }}-arm64
-  - name_template: ghcr.io/fission/fetcher:{{ .Tag }}
-    image_templates:
-      - ghcr.io/fission/fetcher:{{ .Tag }}-amd64
-      - ghcr.io/fission/fetcher:{{ .Tag }}-arm64
-  - name_template: fission/fetcher:{{ .Tag }}
-    image_templates:
-      - fission/fetcher:{{ .Tag }}-amd64
-      - fission/fetcher:{{ .Tag }}-arm64
-  - name_template: ghcr.io/fission/fission-bundle:{{ .Tag }}
-    image_templates:
-      - ghcr.io/fission/fission-bundle:{{ .Tag }}-amd64
-      - ghcr.io/fission/fission-bundle:{{ .Tag }}-arm64
-  - name_template: fission/fission-bundle:{{ .Tag }}
-    image_templates:
-      - fission/fission-bundle:{{ .Tag }}-amd64
-      - fission/fission-bundle:{{ .Tag }}-arm64
-  - name_template: ghcr.io/fission/pre-upgrade-checks:{{ .Tag }}
-    image_templates:
-      - ghcr.io/fission/pre-upgrade-checks:{{ .Tag }}-amd64
-      - ghcr.io/fission/pre-upgrade-checks:{{ .Tag }}-arm64
-  - name_template: fission/pre-upgrade-checks:{{ .Tag }}
-    image_templates:
-      - fission/pre-upgrade-checks:{{ .Tag }}-amd64
-      - fission/pre-upgrade-checks:{{ .Tag }}-arm64
-  - name_template: ghcr.io/fission/reporter:{{ .Tag }}
-    image_templates:
-      - ghcr.io/fission/reporter:{{ .Tag }}-amd64
-      - ghcr.io/fission/reporter:{{ .Tag }}-arm64
-  - name_template: fission/reporter:{{ .Tag }}
-    image_templates:
-      - fission/reporter:{{ .Tag }}-amd64
-      - fission/reporter:{{ .Tag }}-arm64
-  - name_template: ghcr.io/fission/builder:latest
-    image_templates:
-      - ghcr.io/fission/builder:latest-amd64
-      - ghcr.io/fission/builder:latest-arm64
-  - name_template: fission/builder:latest
-    image_templates:
-      - fission/builder:latest-amd64
-      - fission/builder:latest-arm64
-  - name_template: ghcr.io/fission/fetcher:latest
-    image_templates:
-      - ghcr.io/fission/fetcher:latest-amd64
-      - ghcr.io/fission/fetcher:latest-arm64
-  - name_template: fission/fetcher:latest
-    image_templates:
-      - fission/fetcher:latest-amd64
-      - fission/fetcher:latest-arm64
-  - name_template: ghcr.io/fission/fission-bundle:latest
-    image_templates:
-      - ghcr.io/fission/fission-bundle:latest-amd64
-      - ghcr.io/fission/fission-bundle:latest-arm64
-  - name_template: fission/fission-bundle:latest
-    image_templates:
-      - fission/fission-bundle:latest-amd64
-      - fission/fission-bundle:latest-arm64
-  - name_template: ghcr.io/fission/pre-upgrade-checks:latest
-    image_templates:
-      - ghcr.io/fission/pre-upgrade-checks:latest-amd64
-      - ghcr.io/fission/pre-upgrade-checks:latest-arm64
-  - name_template: fission/pre-upgrade-checks:latest
-    image_templates:
-      - fission/pre-upgrade-checks:latest-amd64
-      - fission/pre-upgrade-checks:latest-arm64
-  - name_template: ghcr.io/fission/reporter:latest
-    image_templates:
-      - ghcr.io/fission/reporter:latest-amd64
-      - ghcr.io/fission/reporter:latest-arm64
-  - name_template: fission/reporter:latest
-    image_templates:
-      - fission/reporter:latest-amd64
-      - fission/reporter:latest-arm64
+
+kos:
+  - &ko-linux
+    id: builder
+    build: builder
+    repositories:
+      - ghcr.io/fission/builder:{{.Tag}}
+      - ghcr.io/fission/builder:latest
+      - fission/builder:{{.Tag}}
+      - fission/builder:latest
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    sbom: spdx
+  - <<: *ko-linux
+    id: fetcher
+    build: fetcher
+    repositories:
+      - ghcr.io/fission/fetcher:{{.Tag}}
+      - ghcr.io/fission/fetcher:latest
+      - fission/fetcher:{{.Tag}}
+      - fission/fetcher:latest
+  - <<: *ko-linux
+    id: fission-bundle
+    build: fission-bundle
+    repositories:
+      - ghcr.io/fission/fission-bundle:{{.Tag}}
+      - ghcr.io/fission/fission-bundle:latest
+      - fission/fission-bundle:{{.Tag}}
+      - fission/fission-bundle:latest
+  - <<: *ko-linux
+    id: pre-upgrade-checks
+    build: pre-upgrade-checks
+    repositories:
+      - ghcr.io/fission/pre-upgrade-checks:{{.Tag}}
+      - ghcr.io/fission/pre-upgrade-checks:latest
+      - fission/pre-upgrade-checks:{{.Tag}}
+      - fission/pre-upgrade-checks:latest
+  - <<: *ko-linux
+    id: reporter
+    build: reporter
+    repositories:
+      - ghcr.io/fission/reporter:{{.Tag}}
+      - ghcr.io/fission/reporter:latest
+      - fission/reporter:{{.Tag}}
+      - fission/reporter:latest
+
+# dockers:
+#   - &docker-amd64
+#     use: buildx
+#     goos: linux
+#     goarch: amd64
+#     ids:
+#       - builder
+#     image_templates:
+#       - "fission/builder:latest-amd64"
+#       - "fission/builder:{{ .Tag }}-amd64"
+#       - "ghcr.io/fission/builder:latest-amd64"
+#       - "ghcr.io/fission/builder:{{ .Tag }}-amd64"
+#     dockerfile: cmd/builder/Dockerfile
+#     build_flag_templates:
+#       - "--label=org.opencontainers.image.description=The builder assists in building the fission function source code for deployment."
+#       - "--label=org.opencontainers.image.source={{.GitURL}}"
+#       - "--platform=linux/amd64"
+#       - "--label=org.opencontainers.image.created={{.Date}}"
+#       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+#       - "--label=org.opencontainers.image.version={{.Tag}}"
+#   - <<: *docker-amd64
+#     ids:
+#       - fetcher
+#     image_templates:
+#       - "fission/fetcher:latest-amd64"
+#       - "fission/fetcher:{{ .Tag }}-amd64"
+#       - "ghcr.io/fission/fetcher:latest-amd64"
+#       - "ghcr.io/fission/fetcher:{{ .Tag }}-amd64"
+#     dockerfile: cmd/fetcher/Dockerfile
+#     build_flag_templates:
+#       - "--label=org.opencontainers.image.description=Fetcher is a lightweight component used by environment and builder pods. Fetcher helps in fetch and upload of source/deployment packages and specializing environments."
+#       - "--label=org.opencontainers.image.source={{.GitURL}}"
+#       - "--platform=linux/amd64"
+#       - "--label=org.opencontainers.image.created={{.Date}}"
+#       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+#       - "--label=org.opencontainers.image.version={{.Tag}}"
+#   - <<: *docker-amd64
+#     ids:
+#       - fission-bundle
+#     image_templates:
+#       - "fission/fission-bundle:latest-amd64"
+#       - "fission/fission-bundle:{{ .Tag }}-amd64"
+#       - "ghcr.io/fission/fission-bundle:latest-amd64"
+#       - "ghcr.io/fission/fission-bundle:{{ .Tag }}-amd64"
+#     dockerfile: cmd/fission-bundle/Dockerfile
+#     build_flag_templates:
+#       - "--label=org.opencontainers.image.description=fission-bundle is a component which is a single binary for all components. Most server side components running on server side are fission-bundle binary wrapped in container and used with different arguments."
+#       - "--label=org.opencontainers.image.source={{.GitURL}}"
+#       - "--platform=linux/amd64"
+#       - "--label=org.opencontainers.image.created={{.Date}}"
+#       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+#       - "--label=org.opencontainers.image.version={{.Tag}}"
+#   - <<: *docker-amd64
+#     ids:
+#       - pre-upgrade-checks
+#     image_templates:
+#       - "fission/pre-upgrade-checks:latest-amd64"
+#       - "fission/pre-upgrade-checks:{{ .Tag }}-amd64"
+#       - "ghcr.io/fission/pre-upgrade-checks:latest-amd64"
+#       - "ghcr.io/fission/pre-upgrade-checks:{{ .Tag }}-amd64"
+#     dockerfile: cmd/preupgradechecks/Dockerfile
+#     build_flag_templates:
+#       - "--label=org.opencontainers.image.description=Preupgradechecks ensures that Fission is ready for the targeted version upgrade by performing checks beforehand."
+#       - "--label=org.opencontainers.image.source={{.GitURL}}"
+#       - "--platform=linux/amd64"
+#       - "--label=org.opencontainers.image.created={{.Date}}"
+#       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+#       - "--label=org.opencontainers.image.version={{.Tag}}"
+#   - <<: *docker-amd64
+#     ids:
+#       - reporter
+#     image_templates:
+#       - "fission/reporter:latest-amd64"
+#       - "fission/reporter:{{ .Tag }}-amd64"
+#       - "ghcr.io/fission/reporter:latest-amd64"
+#       - "ghcr.io/fission/reporter:{{ .Tag }}-amd64"
+#     dockerfile: cmd/reporter/Dockerfile
+#     build_flag_templates:
+#       - "--label=org.opencontainers.image.description=The reporter gathers information that assists in improving fission."
+#       - "--label=org.opencontainers.image.source={{.GitURL}}"
+#       - "--platform=linux/amd64"
+#       - "--label=org.opencontainers.image.created={{.Date}}"
+#       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+#       - "--label=org.opencontainers.image.version={{.Tag}}"
+#   - &docker-arm64
+#     use: buildx
+#     goos: linux
+#     goarch: arm64
+#     ids:
+#       - builder
+#     image_templates:
+#       - "fission/builder:latest-arm64"
+#       - "fission/builder:{{ .Tag }}-arm64"
+#       - "ghcr.io/fission/builder:latest-arm64"
+#       - "ghcr.io/fission/builder:{{ .Tag }}-arm64"
+#     dockerfile: cmd/builder/Dockerfile
+#     build_flag_templates:
+#       - "--label=org.opencontainers.image.description=The builder assists in building the fission function source code for deployment."
+#       - "--label=org.opencontainers.image.source={{.GitURL}}"
+#       - "--platform=linux/arm64"
+#       - "--label=org.opencontainers.image.created={{.Date}}"
+#       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+#       - "--label=org.opencontainers.image.version={{.Tag}}"
+#   - <<: *docker-arm64
+#     ids:
+#       - fetcher
+#     image_templates:
+#       - "fission/fetcher:latest-arm64"
+#       - "fission/fetcher:{{ .Tag }}-arm64"
+#       - "ghcr.io/fission/fetcher:latest-arm64"
+#       - "ghcr.io/fission/fetcher:{{ .Tag }}-arm64"
+#     dockerfile: cmd/fetcher/Dockerfile
+#     build_flag_templates:
+#       - "--label=org.opencontainers.image.description=Fetcher is a lightweight component used by environment and builder pods. Fetcher helps in fetch and upload of source/deployment packages and specializing environments."
+#       - "--label=org.opencontainers.image.source={{.GitURL}}"
+#       - "--platform=linux/arm64"
+#       - "--label=org.opencontainers.image.created={{.Date}}"
+#       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+#       - "--label=org.opencontainers.image.version={{.Tag}}"
+#   - <<: *docker-arm64
+#     ids:
+#       - fission-bundle
+#     image_templates:
+#       - "fission/fission-bundle:latest-arm64"
+#       - "fission/fission-bundle:{{ .Tag }}-arm64"
+#       - "ghcr.io/fission/fission-bundle:latest-arm64"
+#       - "ghcr.io/fission/fission-bundle:{{ .Tag }}-arm64"
+#     dockerfile: cmd/fission-bundle/Dockerfile
+#     build_flag_templates:
+#       - "--label=org.opencontainers.image.description=fission-bundle is a component which is a single binary for all components. Most server side components running on server side are fission-bundle binary wrapped in container and used with different arguments."
+#       - "--label=org.opencontainers.image.source={{.GitURL}}"
+#       - "--platform=linux/arm64"
+#       - "--label=org.opencontainers.image.created={{.Date}}"
+#       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+#       - "--label=org.opencontainers.image.version={{.Tag}}"
+#   - <<: *docker-arm64
+#     ids:
+#       - pre-upgrade-checks
+#     image_templates:
+#       - "fission/pre-upgrade-checks:latest-arm64"
+#       - "fission/pre-upgrade-checks:{{ .Tag }}-arm64"
+#       - "ghcr.io/fission/pre-upgrade-checks:latest-arm64"
+#       - "ghcr.io/fission/pre-upgrade-checks:{{ .Tag }}-arm64"
+#     dockerfile: cmd/preupgradechecks/Dockerfile
+#     build_flag_templates:
+#       - "--label=org.opencontainers.image.description=Preupgradechecks ensures that Fission is ready for the targeted version upgrade by performing checks beforehand."
+#       - "--label=org.opencontainers.image.source={{.GitURL}}"
+#       - "--platform=linux/arm64"
+#       - "--label=org.opencontainers.image.created={{.Date}}"
+#       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+#       - "--label=org.opencontainers.image.version={{.Tag}}"
+#   - <<: *docker-arm64
+#     ids:
+#       - reporter
+#     image_templates:
+#       - "fission/reporter:latest-arm64"
+#       - "fission/reporter:{{ .Tag }}-arm64"
+#       - "ghcr.io/fission/reporter:latest-arm64"
+#       - "ghcr.io/fission/reporter:{{ .Tag }}-arm64"
+#     dockerfile: cmd/reporter/Dockerfile
+#     build_flag_templates:
+#       - "--label=org.opencontainers.image.description=The reporter gathers information that assists in improving fission."
+#       - "--label=org.opencontainers.image.source={{.GitURL}}"
+#       - "--platform=linux/arm64"
+#       - "--label=org.opencontainers.image.created={{.Date}}"
+#       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+#       - "--label=org.opencontainers.image.version={{.Tag}}"
+# docker_manifests:
+#   - name_template: ghcr.io/fission/builder:{{ .Tag }}
+#     image_templates:
+#       - ghcr.io/fission/builder:{{ .Tag }}-amd64
+#       - ghcr.io/fission/builder:{{ .Tag }}-arm64
+#   - name_template: fission/builder:{{ .Tag }}
+#     image_templates:
+#       - fission/builder:{{ .Tag }}-amd64
+#       - fission/builder:{{ .Tag }}-arm64
+#   - name_template: ghcr.io/fission/fetcher:{{ .Tag }}
+#     image_templates:
+#       - ghcr.io/fission/fetcher:{{ .Tag }}-amd64
+#       - ghcr.io/fission/fetcher:{{ .Tag }}-arm64
+#   - name_template: fission/fetcher:{{ .Tag }}
+#     image_templates:
+#       - fission/fetcher:{{ .Tag }}-amd64
+#       - fission/fetcher:{{ .Tag }}-arm64
+#   - name_template: ghcr.io/fission/fission-bundle:{{ .Tag }}
+#     image_templates:
+#       - ghcr.io/fission/fission-bundle:{{ .Tag }}-amd64
+#       - ghcr.io/fission/fission-bundle:{{ .Tag }}-arm64
+#   - name_template: fission/fission-bundle:{{ .Tag }}
+#     image_templates:
+#       - fission/fission-bundle:{{ .Tag }}-amd64
+#       - fission/fission-bundle:{{ .Tag }}-arm64
+#   - name_template: ghcr.io/fission/pre-upgrade-checks:{{ .Tag }}
+#     image_templates:
+#       - ghcr.io/fission/pre-upgrade-checks:{{ .Tag }}-amd64
+#       - ghcr.io/fission/pre-upgrade-checks:{{ .Tag }}-arm64
+#   - name_template: fission/pre-upgrade-checks:{{ .Tag }}
+#     image_templates:
+#       - fission/pre-upgrade-checks:{{ .Tag }}-amd64
+#       - fission/pre-upgrade-checks:{{ .Tag }}-arm64
+#   - name_template: ghcr.io/fission/reporter:{{ .Tag }}
+#     image_templates:
+#       - ghcr.io/fission/reporter:{{ .Tag }}-amd64
+#       - ghcr.io/fission/reporter:{{ .Tag }}-arm64
+#   - name_template: fission/reporter:{{ .Tag }}
+#     image_templates:
+#       - fission/reporter:{{ .Tag }}-amd64
+#       - fission/reporter:{{ .Tag }}-arm64
+#   - name_template: ghcr.io/fission/builder:latest
+#     image_templates:
+#       - ghcr.io/fission/builder:latest-amd64
+#       - ghcr.io/fission/builder:latest-arm64
+#   - name_template: fission/builder:latest
+#     image_templates:
+#       - fission/builder:latest-amd64
+#       - fission/builder:latest-arm64
+#   - name_template: ghcr.io/fission/fetcher:latest
+#     image_templates:
+#       - ghcr.io/fission/fetcher:latest-amd64
+#       - ghcr.io/fission/fetcher:latest-arm64
+#   - name_template: fission/fetcher:latest
+#     image_templates:
+#       - fission/fetcher:latest-amd64
+#       - fission/fetcher:latest-arm64
+#   - name_template: ghcr.io/fission/fission-bundle:latest
+#     image_templates:
+#       - ghcr.io/fission/fission-bundle:latest-amd64
+#       - ghcr.io/fission/fission-bundle:latest-arm64
+#   - name_template: fission/fission-bundle:latest
+#     image_templates:
+#       - fission/fission-bundle:latest-amd64
+#       - fission/fission-bundle:latest-arm64
+#   - name_template: ghcr.io/fission/pre-upgrade-checks:latest
+#     image_templates:
+#       - ghcr.io/fission/pre-upgrade-checks:latest-amd64
+#       - ghcr.io/fission/pre-upgrade-checks:latest-arm64
+#   - name_template: fission/pre-upgrade-checks:latest
+#     image_templates:
+#       - fission/pre-upgrade-checks:latest-amd64
+#       - fission/pre-upgrade-checks:latest-arm64
+#   - name_template: ghcr.io/fission/reporter:latest
+#     image_templates:
+#       - ghcr.io/fission/reporter:latest-amd64
+#       - ghcr.io/fission/reporter:latest-arm64
+#   - name_template: fission/reporter:latest
+#     image_templates:
+#       - fission/reporter:latest-amd64
+#       - fission/reporter:latest-arm64
 changelog:
   disable: true
 archives:
@@ -356,3 +424,10 @@ docker_signs:
     - '--yes' # needed for cosign 2.0.0+
 sboms:
   - artifacts: archive
+    id: archive
+  - artifacts: source
+    id: source
+  - artifacts: binary
+    id: binary
+  - artifacts: package
+    id: package
