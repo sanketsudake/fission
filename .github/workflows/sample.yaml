@@ -17,18 +17,30 @@ jobs:
       run: |
         set -euo pipefail
         image_and_digest=$(cat .github/workflows/artifacts.json | jq -r '.[] | select (.type=="Docker Manifest") | {name, "digest": (.extra.Digest // .extra.Checksum)} | select(.digest) | {name} + {digest} | join("@") | sub("^sha256:";"")' | grep -v latest)
-        echo "Got image and digest: $image_and_digest"
-        ghcr_images=$(echo "${image_and_digest}" | grep ghcr.io | cut -d'@' -f1 | cut -d':' -f1 | jq -R -s -c 'split("\n") | map(select(. != ""))')
-        ghcr_digests=$(echo "${image_and_digest}" | grep ghcr.io | cut -d'@' -f2 | jq -R -s -c 'split("\n") | map(select(. != ""))')
-        echo "GHCR images: $ghcr_images"
-        echo "GHCR digests: $ghcr_digests"
+        ghcr_images=$(echo "${image_and_digest}" | grep ghcr.io | jq -R -s -c '
+          split("\n")
+          | map(select(. != ""))
+          | map(
+              split("@")
+              | {
+                  "image": .[0] | split(":")[0],
+                  "checksum": .[1]
+                }
+            )')
+
         echo "ghcr_images=$ghcr_images" >> "$GITHUB_OUTPUT"
-        echo "ghcr_digests=$ghcr_digests" >> "$GITHUB_OUTPUT"
-        # docker_images=$(echo "${image_and_digest}" | grep -v ghcr.io | cut -d'@' -f1 | cut -d':' -f1 | jq -R -s -c 'split("\n") | map(select(. != ""))')
-        # docker_digests=$(echo "${image_and_digest}" | grep -v ghcr.io | cut -d'@' -f2 | jq -R -s -c 'split("\n") | map(select(. != ""))')
-        # echo "Docker images: $docker_images"
+        # docker_images=$(echo "${image_and_digest}" | grep -v ghcr.io | jq -R -s -c '
+        #   split("\n")
+        #   | map(select(. != ""))
+        #   | map(
+        #       split("@")
+        #       | {
+        #           "image": .[0] | split(":")[0],
+        #           "checksum": .[1]
+        #         }
+        #     )')
         # echo "docker_images=$docker_images" >> "$GITHUB_OUTPUT"
-        # echo "docker_digests=$docker_digests" >> "$GITHUB_OUTPUT"
+
 
   image-verifier:
     needs: [build]
