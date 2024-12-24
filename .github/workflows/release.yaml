@@ -183,8 +183,8 @@ jobs:
     with:
       image: ${{ fromJson(toJson(matrix)).image }}
       digest: ${{ fromJson(toJson(matrix)).checksum }}
-      registry-username: ${{ secrets.DOCKERHUB_USERNAME }}
     secrets:
+      registry-username: ${{ secrets.DOCKERHUB_USERNAME }}
       registry-password: ${{ secrets.DOCKERHUB_TOKEN }}
 
   verification-with-slsa-verifier:
@@ -203,7 +203,7 @@ jobs:
         run: |
           set -euo pipefail
           echo "repo=$GITHUB_REPOSITORY"
-          echo "ref=$GITHUB_REF_NAME"
+          echo "ref=$VERSION"
           gh -R "$GITHUB_REPOSITORY" release download "$VERSION" -p "$PROVENANCE"
 
       - name: Verify assets
