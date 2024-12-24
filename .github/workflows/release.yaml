@@ -9,12 +9,15 @@ env:
   KIND_VERSION: v0.23.0
   KIND_NODE_IMAGE_TAG: v1.25.16
   KIND_CLUSTER_NAME: kind
+  COSIGN_VERSION: v2.4.1
 
 jobs:
   create-draft-release:
     outputs:
       hashes: ${{ steps.binary.outputs.hashes }}
       ghcr_images: ${{ steps.image.outputs.ghcr_images }}
+      docker_images: ${{ steps.image.outputs.docker_images }}
+      version: ${{ steps.get_version.outputs.VERSION }}
     permissions:
       contents: write # for goreleaser/goreleaser-action to create a GitHub release
       packages: write # for goreleaser/goreleaser-action to upload artifacts to GitHub Packages
@@ -65,27 +68,21 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # - name: Login to docker.io
-      #   uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
-      #   with:
-      #     username: ${{ secrets.DOCKERHUB_USERNAME }}
-      #     password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Login to docker.io
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@dc72c7d5c4d10cd6bcb8cf6e3fd625a9e5e537da # v3.7.0
         with:
-          cosign-release: "v2.4.1"
+          cosign-release: ${{ env.COSIGN_VERSION }}
 
       - name: Check cosign install!
         run: cosign version
 
       - uses: anchore/sbom-action/download-syft@v0.17.9
-
-      # - name: Write cosign signing key to disk
-      #   run: 'echo "$KEY" > cosign.key'
-      #   shell: bash
-      #   env:
-      #     KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
 
       - name: Generate yaml for manifest, Minikube and Openshift installation
         run: ${GITHUB_WORKSPACE}/hack/build-yaml.sh $VERSION
@@ -131,17 +128,17 @@ jobs:
                   }
               )')
           echo "ghcr_images=$ghcr_images" >> "$GITHUB_OUTPUT"
-          # docker_images=$(echo "${image_and_digest}" | grep -v ghcr.io | jq -R -s -c '
-          #   split("\n")
-          #   | map(select(. != ""))
-          #   | map(
-          #       split("@")
-          #       | {
-          #           "image": .[0] | split(":")[0],
-          #           "checksum": .[1]
-          #         }
-          #     )')
-          # echo "docker_images=$docker_images" >> "$GITHUB_OUTPUT"
+          docker_images=$(echo "${image_and_digest}" | grep -v ghcr.io | jq -R -s -c '
+            split("\n")
+            | map(select(. != ""))
+            | map(
+                split("@")
+                | {
+                    "image": .[0] | split(":")[0],
+                    "checksum": .[1]
+                  }
+              )')
+          echo "docker_images=$docker_images" >> "$GITHUB_OUTPUT"
 
   binary-provenance:
     needs: [create-draft-release]
@@ -173,22 +170,22 @@ jobs:
     secrets:
       registry-password: ${{ secrets.GITHUB_TOKEN }}
 
-  # image-provenance-docker:
-  #   needs: [create-draft-release]
-  #   strategy:
-  #     matrix:
-  #       include: ${{ fromJson(needs.create-draft-release.outputs.docker_images) }}
-  #   permissions:
-  #     actions: read
-  #     id-token: write
-  #     packages: write
-  #   uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0
-  #   with:
-  #     image: ${{ fromJson(toJson(matrix)).image }}
-  #     digest: ${{ fromJson(toJson(matrix)).checksum }}
-  #     registry-username: ${{ secrets.DOCKERHUB_USERNAME }}
-  #   secrets:
-  #     registry-password: ${{ secrets.DOCKERHUB_TOKEN }}
+  image-provenance-docker:
+    needs: [create-draft-release]
+    strategy:
+      matrix:
+        include: ${{ fromJson(needs.create-draft-release.outputs.docker_images) }}
+    permissions:
+      actions: read
+      id-token: write
+      packages: write
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0
+    with:
+      image: ${{ fromJson(toJson(matrix)).image }}
+      digest: ${{ fromJson(toJson(matrix)).checksum }}
+      registry-username: ${{ secrets.DOCKERHUB_USERNAME }}
+    secrets:
+      registry-password: ${{ secrets.DOCKERHUB_TOKEN }}
 
   verification-with-slsa-verifier:
     needs: [create-draft-release, binary-provenance]
@@ -202,13 +199,18 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PROVENANCE: "fission.intoto.jsonl"
+          VERSION: ${{ needs.create-draft-release.outputs.version }}
         run: |
           set -euo pipefail
-          gh -R "$GITHUB_REPOSITORY" release download "$GITHUB_REF_NAME" -p "$PROVENANCE"
+          echo "repo=$GITHUB_REPOSITORY"
+          echo "ref=$GITHUB_REF_NAME"
+          gh -R "$GITHUB_REPOSITORY" release download "$VERSION" -p "$PROVENANCE"
+
       - name: Verify assets
         env:
           CHECKSUMS: ${{ needs.create-draft-release.outputs.hashes }}
           PROVENANCE: "fission.intoto.jsonl"
+          VERSION: ${{ needs.create-draft-release.outputs.version }}
         run: |
           set -euo pipefail
           echo "CHECKSUMS=$CHECKSUMS"
@@ -219,7 +221,7 @@ jobs:
               echo "Verifying $fn"
               slsa-verifier verify-artifact --provenance-path "$PROVENANCE" \
                                             --source-uri "github.com/$GITHUB_REPOSITORY" \
-                                            --source-tag "$GITHUB_REF_NAME" \
+                                            --source-tag "$VERSION" \
                                             "$fn"
           done <<<"$checksums"
 
@@ -241,7 +243,7 @@ jobs:
       - name: Install Cosign
         uses: sigstore/cosign-installer@dc72c7d5c4d10cd6bcb8cf6e3fd625a9e5e537da # v3.7.0
         with:
-          cosign-release: "v2.4.1"
+          cosign-release: ${{ env.COSIGN_VERSION }}
 
       - name: Verify image
         env:
