@@ -85,60 +85,65 @@ kos:
     bare: true
     preserve_import_paths: false
     base_import_paths: false
-    annotations:
-      "org.opencontainers.image.description": "The builder assists in building the fission function source code for deployment."
-      "org.opencontainers.image.source": "{{.GitURL}}"
-      "org.opencontainers.image.created": "{{.Date}}"
-      "org.opencontainers.image.revision": "{{.FullCommit}}"
-      "org.opencontainers.image.version": "{{.Tag}}"
+    labels: &builder-labels
+      org.opencontainers.image.description: "The builder assists in building the fission function source code for deployment."
+      org.opencontainers.image.source: "{{.GitURL}}"
+      org.opencontainers.image.created: "{{.Date}}"
+      org.opencontainers.image.revision: "{{.FullCommit}}"
+      org.opencontainers.image.version: "{{.Tag}}"
+    annotations: *builder-labels
   - <<: *ko-linux
     id: fetcher
     build: fetcher
     repositories:
       - ghcr.io/sanketsudake/fetcher
       - docker.io/tripples/fetcher
-    annotations:
-      "org.opencontainers.image.description": "Fetcher is a lightweight component used by environment and builder pods. Fetcher helps in fetch and upload of source/deployment packages and specializing environments."
-      "org.opencontainers.image.source": "{{.GitURL}}"
-      "org.opencontainers.image.created": "{{.Date}}"
-      "org.opencontainers.image.revision": "{{.FullCommit}}"
-      "org.opencontainers.image.version": "{{.Tag}}"
+    labels: &fetcher-labels
+      org.opencontainers.image.description: "Fetcher is a lightweight component used by environment and builder pods. Fetcher helps in fetch and upload of source/deployment packages and specializing environments."
+      org.opencontainers.image.source: "{{.GitURL}}"
+      org.opencontainers.image.created: "{{.Date}}"
+      org.opencontainers.image.revision: "{{.FullCommit}}"
+      org.opencontainers.image.version: "{{.Tag}}"
+    annotations: *fetcher-labels
   - <<: *ko-linux
     id: fission-bundle
     build: fission-bundle
     repositories:
       - ghcr.io/sanketsudake/fission-bundle
       - docker.io/tripples/fission-bundle
-    annotations:
-      "org.opencontainers.image.description": "fission-bundle is a component which is a single binary for all components. Most server side components running on server side are fission-bundle binary wrapped in container and used with different arguments."
-      "org.opencontainers.image.source": "{{.GitURL}}"
-      "org.opencontainers.image.created": "{{.Date}}"
-      "org.opencontainers.image.revision": "{{.FullCommit}}"
-      "org.opencontainers.image.version": "{{.Tag}}"
+    labels: &fission-bundle-labels
+      org.opencontainers.image.description: "fission-bundle is a component which is a single binary for all components. Most server side components running on server side are fission-bundle binary wrapped in container and used with different arguments."
+      org.opencontainers.image.source: "{{.GitURL}}"
+      org.opencontainers.image.created: "{{.Date}}"
+      org.opencontainers.image.revision: "{{.FullCommit}}"
+      org.opencontainers.image.version: "{{.Tag}}"
+    annotations: *fission-bundle-labels
   - <<: *ko-linux
     id: pre-upgrade-checks
     build: pre-upgrade-checks
     repositories:
       - ghcr.io/sanketsudake/pre-upgrade-checks
       - docker.io/tripples/pre-upgrade-checks
-    annotations:
-      "org.opencontainers.image.description": "Preupgradechecks ensures that Fission is ready for the targeted version upgrade by performing checks beforehand."
-      "org.opencontainers.image.source": "{{.GitURL}}"
-      "org.opencontainers.image.created": "{{.Date}}"
-      "org.opencontainers.image.revision": "{{.FullCommit}}"
-      "org.opencontainers.image.version": "{{.Tag}}"
+    labels: &pre-upgrade-checks-labels
+      org.opencontainers.image.description: "Preupgradechecks ensures that Fission is ready for the targeted version upgrade by performing checks beforehand."
+      org.opencontainers.image.source: "{{.GitURL}}"
+      org.opencontainers.image.created: "{{.Date}}"
+      org.opencontainers.image.revision: "{{.FullCommit}}"
+      org.opencontainers.image.version: "{{.Tag}}"
+    annotations: *pre-upgrade-checks-labels
   - <<: *ko-linux
     id: reporter
     build: reporter
     repositories:
       - ghcr.io/sanketsudake/reporter
       - docker.io/tripples/reporter
-    annotations:
-      "org.opencontainers.image.description": "The reporter gathers information that assists in improving fission."
-      "org.opencontainers.image.source": "{{.GitURL}}"
-      "org.opencontainers.image.created": "{{.Date}}"
-      "org.opencontainers.image.revision": "{{.FullCommit}}"
-      "org.opencontainers.image.version": "{{.Tag}}"
+    labels: &reporter-labels
+      org.opencontainers.image.description: "The reporter gathers information that assists in improving fission."
+      org.opencontainers.image.source: "{{.GitURL}}"
+      org.opencontainers.image.created: "{{.Date}}"
+      org.opencontainers.image.revision: "{{.FullCommit}}"
+      org.opencontainers.image.version: "{{.Tag}}"
+    annotations: *reporter-labels
 
 changelog:
   disable: true
