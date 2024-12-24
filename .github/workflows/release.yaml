@@ -209,6 +209,7 @@ jobs:
 
       - name: Verify assets
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CHECKSUMS: ${{ needs.create-draft-release.outputs.hashes }}
           PROVENANCE: ${{ needs.binary-provenance.outputs.provenance-name }}
           VERSION: ${{ needs.create-draft-release.outputs.version }}
@@ -220,6 +221,7 @@ jobs:
           while read -r line; do
               fn=$(echo $line | cut -d ' ' -f2)
               echo "Verifying $fn"
+              gh -R "$GITHUB_REPOSITORY" release download "$VERSION" -p "$fn"
               slsa-verifier verify-artifact --provenance-path "$PROVENANCE" \
                                             --source-uri "github.com/$GITHUB_REPOSITORY" \
                                             --source-tag "$VERSION" \
