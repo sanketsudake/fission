@@ -201,16 +201,18 @@ jobs:
       - name: Download assets
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PROVENANCE: "${{ needs.binary-provenance.outputs.provenance-name }}"
+          PROVENANCE: "fission.intoto.jsonl"
         run: |
           set -euo pipefail
           gh -R "$GITHUB_REPOSITORY" release download "$GITHUB_REF_NAME" -p "$PROVENANCE"
       - name: Verify assets
         env:
           CHECKSUMS: ${{ needs.create-draft-release.outputs.hashes }}
-          PROVENANCE: "${{ needs.binary-provenance.outputs.provenance-name }}"
+          PROVENANCE: "fission.intoto.jsonl"
         run: |
           set -euo pipefail
+          echo "CHECKSUMS=$CHECKSUMS"
+          echo "PROVENANCE=$PROVENANCE"
           checksums=$(echo "$CHECKSUMS" | base64 -d)
           while read -r line; do
               fn=$(echo $line | cut -d ' ' -f2)
@@ -246,6 +248,7 @@ jobs:
           IMAGE: ${{ fromJson(toJson(matrix)).image }}
           DIGEST: ${{ fromJson(toJson(matrix)).checksum }}
         run: |
+          echo "Verifying $IMAGE@$DIGEST"
           cosign verify-attestation \
              --type slsaprovenance \
              --certificate-oidc-issuer https://token.actions.githubusercontent.com \
