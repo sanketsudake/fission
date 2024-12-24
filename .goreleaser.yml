@@ -5,7 +5,7 @@ release:
   github:
     owner: sanketsudake
     name: fission
-  prerelease: true
+  prerelease: "true"
   draft: true
   header: |
     Release Highlights: https://fission.io/docs/releases/{{ .Tag }}/

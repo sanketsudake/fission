@@ -82,7 +82,7 @@ jobs:
       - name: Check cosign install!
         run: cosign version
 
-      - uses: anchore/sbom-action/download-syft@v0.17.9
+      - uses: anchore/sbom-action/download-syft@df80a981bc6edbc4e220a492d3cbe9f5547a6e75 #v0.17.9
 
       - name: Generate yaml for manifest, Minikube and Openshift installation
         run: ${GITHUB_WORKSPACE}/hack/build-yaml.sh $VERSION
@@ -146,10 +146,10 @@ jobs:
       actions: read # To read the workflow path.
       id-token: write # To sign the provenance.
       contents: write # To add assets to a release.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0  # Do not use commit hash
     with:
       base64-subjects: "${{ needs.create-draft-release.outputs.hashes }}"
-      provenance-name: "fission.intoto.jsonl"
+      provenance-name: "fission_${{ needs.create-draft-release.outputs.version }}.intoto.jsonl"
       upload-assets: true # upload to a new release
       draft-release: true # create a draft release
 
@@ -162,7 +162,7 @@ jobs:
       actions: read
       id-token: write
       packages: write
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0 # Do not use commit hash
     with:
       image: ${{ fromJson(toJson(matrix)).image }}
       digest: ${{ fromJson(toJson(matrix)).checksum }}
@@ -179,7 +179,7 @@ jobs:
       actions: read
       id-token: write
       packages: write
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0 # Do not use commit hash
     with:
       image: ${{ fromJson(toJson(matrix)).image }}
       digest: ${{ fromJson(toJson(matrix)).checksum }}
@@ -190,15 +190,16 @@ jobs:
   verification-with-slsa-verifier:
     needs: [create-draft-release, binary-provenance]
     runs-on: ubuntu-latest
-    permissions: read-all
+    permissions:
+      contents: write # To download the assets from draft release.
     steps:
       - name: Install the verifier
-        uses: slsa-framework/slsa-verifier/actions/installer@v2.6.0
+        uses: slsa-framework/slsa-verifier/actions/installer@3714a2a4684014deb874a0e737dffa0ee02dd647 # v2.6.0
 
       - name: Download assets
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PROVENANCE: "fission.intoto.jsonl"
+          PROVENANCE: ${{ needs.binary-provenance.outputs.provenance-name }}
           VERSION: ${{ needs.create-draft-release.outputs.version }}
         run: |
           set -euo pipefail
@@ -209,7 +210,7 @@ jobs:
       - name: Verify assets
         env:
           CHECKSUMS: ${{ needs.create-draft-release.outputs.hashes }}
-          PROVENANCE: "fission.intoto.jsonl"
+          PROVENANCE: ${{ needs.binary-provenance.outputs.provenance-name }}
           VERSION: ${{ needs.create-draft-release.outputs.version }}
         run: |
           set -euo pipefail
